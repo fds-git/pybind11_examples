@@ -46,3 +46,7 @@ distutils заменен на setuptools на примере https://www.youtube
 Стандартная библиотека будет лежать
 
         /usr/include/c++/13
+
+# ATTENTION
+
+Параметр типа pybind11::array_t<std::array<char, 32>> передается в функцию по значению.
