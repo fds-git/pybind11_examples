@@ -1,4 +1,6 @@
 build
 mylibrary.egg-info
 venv
+.env
 .vscode
+libs/*

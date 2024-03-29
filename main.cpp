@@ -1,4 +1,5 @@
 #include "library.h"
+#include "string_json.h"
 
 namespace py = pybind11;
 
@@ -17,4 +18,6 @@ PYBIND11_MODULE(mylibrary, m) {
     m.def("inplace_multiply", &inplace_multiply, "Check that array of doubles transfers by refence");
     m.def("test_array_uuid", &test_array_uuid, "Check that array of str transfers by value");
     m.def("test_array_doubles", &test_array_doubles, "Check that array of doubles transfers by refence");
+    m.def("str_match_result", &str_match_result, "Str matcher");
+    m.def("str_match_result_v2", &str_match_result_v2, "Str matcher V2");
 };

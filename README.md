@@ -19,19 +19,25 @@ distutils заменен на setuptools на примере https://www.youtube
 
 4.  Обновить инструменты сборки модулей
 
-        python -m pip install wheel setuptools pip --upgrade 
+        python -m pip install wheel setuptools pip --upgrade
 
-5.  Скомпилировать и собрать python модуль ("... install ." потому что setup.py находится в текущей директории)
-   
+5. Скачать библиотеку json в libs (и удалить лишнее)
+
+        git clone --depth 1 --single-branch --branch v3.11.3 https://github.com/nlohmann/json.git ./libs/json
+        rm -rf ./libs/json/docs ./libs/json/.git ./libs/json/tests
+
+6.  Скомпилировать и собрать python модуль ("... install ." потому что setup.py находится в текущей директории)
+
         python -m pip install .
 
-6.  Проверить, что модуль добавился в python
+7.  Проверить, что модуль добавился в python
 
         python -m pip list | grep mylibrary
 
-7.  Запустить тест
-   
+8.  Запустить тесты
+
         python test.py
+        python test_1.py
 
 
 ## Добить пример https://smyt.ru/blog/sozdaem-s-python-rasshireniya-s-pomshyu-pybind11/

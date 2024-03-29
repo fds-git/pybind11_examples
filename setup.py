@@ -1,12 +1,13 @@
 import glob
-import os.path as osp
-from setuptools import setup
+from pathlib import Path
+
 from pybind11.setup_helpers import Pybind11Extension, build_ext
-import pybind11
+from setuptools import setup
 
-
-ROOT_DIR = osp.dirname(osp.abspath(__file__))
-include_dirs = [osp.join(ROOT_DIR, "include")]
+ROOT_DIR = Path(__file__).parent
+LIBS_DIR =  ROOT_DIR.joinpath("libs")
+include_dirs = [ROOT_DIR.joinpath("include")]
+include_dirs.extend(list(lib.joinpath("include") for lib in LIBS_DIR.iterdir()))
 
 sources = glob.glob('*.cpp')
 
@@ -16,8 +17,7 @@ ext_modules = [
     Pybind11Extension(
         name="mylibrary",
         sources=sources,
-        include_dirs=include_dirs,#[pybind11.get_include()],
-        # Example: passing in the version to the compiled code
+        include_dirs=include_dirs, #[pybind11.get_include()], Example: passing in the version to the compiled code
         define_macros=[("VERSION_INFO", __version__)],
     ),
 ]
