@@ -104,7 +104,11 @@ std::string str_match_result_v2(
     start = std::chrono::high_resolution_clock::now();
     if (similarities_buf.ndim != 1 || list_ids_buf.ndim != 1 || face_indexes_buf.ndim != 1 || list_ids_to_search_buf.ndim != 1)
         throw std::runtime_error("Number of dimensions must be one");
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Проверка размерности " << duration.count() << std::endl;
 
+    start = std::chrono::high_resolution_clock::now();
     if ((similarities_buf.size != list_ids_buf.size) || (similarities_buf.size != face_indexes_buf.size))
         throw std::runtime_error("Input shapes must be the same");
     stop = std::chrono::high_resolution_clock::now();
@@ -122,21 +126,38 @@ std::string str_match_result_v2(
 
     // Формируем результирующий словарь
     start = std::chrono::high_resolution_clock::now();
-    std::unordered_map<int, std::vector<std::pair<py::str, double>>> result_map;
+    std::unordered_map<int, json> result_map;
+    std::vector<int> helper(max_list_index, 0);
+    //Заполняем его значениями limit в тех ячейках, индекс которых
+    //равен значениям из list_ids_to_rearch
+    for(int i = 0; i < list_ids_to_search_buf.shape[0]; ++i) {
+        int list_id = list_ids_to_search_ptr[i];
+        helper[list_id] = limit;
+        result_map[list_id] = json::array({});
+    }
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Инициализация словаря " << duration.count() << std::endl;
+
+    start = std::chrono::high_resolution_clock::now();
     for (long int i = 0; i < similarities_buf.shape[0]; ++i)
     {
         int list_idx = list_ids_ptr[i];
         int face_idx = face_indexes_ptr[i];
-        if (result_map[list_idx].size() < limit)
-        {
+        if (helper[list_idx]) {
+            helper[list_idx]--;
+
             py::str face_id = face_ids[py::int_{face_idx}];
             double similarity = similarities_ptr[i];
-            result_map[list_idx].push_back(std::make_pair(face_id, similarity));
+            result_map[list_idx].push_back({{"id", face_id}, {"similarity", similarity}});
+        }
+        else {
+            continue;
         }
     }
     stop = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Формироваине словаря " << duration.count() << std::endl;
+    std::cout << "Заполнение словаря " << duration.count() << std::endl;
 
     start = std::chrono::high_resolution_clock::now();
     // Формируем JSON из словаря
@@ -147,14 +168,14 @@ std::string str_match_result_v2(
         auto iter = result_map.find(list_id);
         if (iter != result_map.end()) // if there is no key in map - end
         {
-            json list_data;
-            for (const auto &value : iter->second)
-            {
-                list_data.push_back({{"id", value.first}, {"similarity", value.second}});
-            }
+            const auto list_data = iter->second;
             response.push_back(list_data);
         }
     }
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Формирование json из словаря " << duration.count() << std::endl;
+
     std::string json_str = response.dump();
 
     stop = std::chrono::high_resolution_clock::now();
