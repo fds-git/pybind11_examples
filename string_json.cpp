@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <nlohmann/json.hpp>
+#include <chrono>
 
 namespace py = pybind11;
 using json = nlohmann::json;
@@ -91,23 +92,36 @@ std::string str_match_result_v2(
     int limit)
 {
     // Request a py::buffer_info object, which contains detailed information about the buffer underlying the NumPy array.
+    auto start = std::chrono::high_resolution_clock::now();
     py::buffer_info similarities_buf = similarities.request();
     py::buffer_info list_ids_buf = list_ids.request();
     py::buffer_info face_indexes_buf = face_indexes.request();
     py::buffer_info list_ids_to_search_buf = list_ids_to_search.request();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Получение буфера " << duration.count() << std::endl;
 
+    start = std::chrono::high_resolution_clock::now();
     if (similarities_buf.ndim != 1 || list_ids_buf.ndim != 1 || face_indexes_buf.ndim != 1 || list_ids_to_search_buf.ndim != 1)
         throw std::runtime_error("Number of dimensions must be one");
 
     if ((similarities_buf.size != list_ids_buf.size) || (similarities_buf.size != face_indexes_buf.size))
         throw std::runtime_error("Input shapes must be the same");
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Проверка размерности " << duration.count() << std::endl;
 
+    start = std::chrono::high_resolution_clock::now();
     double *similarities_ptr = static_cast<double *>(similarities_buf.ptr);
     int *list_ids_ptr = static_cast<int *>(list_ids_buf.ptr);
     int *face_indexes_ptr = static_cast<int *>(face_indexes_buf.ptr);
     int *list_ids_to_search_ptr = static_cast<int *>(list_ids_to_search_buf.ptr);
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Получение указателей " << duration.count() << std::endl;
 
     // Формируем результирующий словарь
+    start = std::chrono::high_resolution_clock::now();
     std::unordered_map<int, std::vector<std::pair<py::str, double>>> result_map;
     for (long int i = 0; i < similarities_buf.shape[0]; ++i)
     {
@@ -120,7 +134,11 @@ std::string str_match_result_v2(
             result_map[list_idx].push_back(std::make_pair(face_id, similarity));
         }
     }
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Формироваине словаря " << duration.count() << std::endl;
 
+    start = std::chrono::high_resolution_clock::now();
     // Формируем JSON из словаря
     json response;
     for (long int i = 0; i < list_ids_to_search_buf.shape[0]; ++i)
@@ -137,8 +155,12 @@ std::string str_match_result_v2(
             response.push_back(list_data);
         }
     }
-
     std::string json_str = response.dump();
+
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Формирование json из словаря " << duration.count() << std::endl;
+
     return json_str;
 }
 

@@ -85,7 +85,7 @@ void test_array_doubles(pybind11::array_t<double> doubles) {
 }
 
 
-pybind11::dict match_result(pybind11::array_t<double> similarities, pybind11::array_t<double> list_ids,
+pybind11::dict match_result(pybind11::array_t<double> similarities, pybind11::array_t<int> list_ids,
                             pybind11::array_t<std::array<char, 32>> face_ids, pybind11::array_t<int> list_ids_to_search,
                             int max_list_index, int limit)
 {
@@ -110,7 +110,7 @@ pybind11::dict match_result(pybind11::array_t<double> similarities, pybind11::ar
 
     start = std::chrono::high_resolution_clock::now();
     double *similarities_ptr = static_cast<double *>(similarities_buf.ptr);
-    double *list_ids_ptr = static_cast<double *>(list_ids_buf.ptr);
+    int *list_ids_ptr = static_cast<int *>(list_ids_buf.ptr);
     int *list_ids_to_search_ptr = static_cast<int *>(list_ids_to_search_buf.ptr);
     auto uids_array = face_ids.unchecked<1>();
     stop = std::chrono::high_resolution_clock::now();
